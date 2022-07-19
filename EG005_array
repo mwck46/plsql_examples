@@ -1,0 +1,50 @@
+/*
+To use array
+1) Define array type
+type timestamp_arr IS VARRAY(48) OF date;
+
+2) Declare and initialize 
+tgt_timestamps timestamp_arr := timestamp_arr();
+
+3) Set element into array 
+   tgt_timestamps.extend; 
+   tgt_timestamps(1) := now_timestamp_rounded;
+*/
+DECLARE 
+   now_timestamp date;
+   now_timestamp_rounded date;
+   
+   type timestamp_arr IS VARRAY(48) OF date; 
+   tgt_timestamps timestamp_arr := timestamp_arr();
+
+   FUNCTION trunc_timestamp (curr_t IN date)
+   RETURN date 
+   IS
+      trunc_timestamp date;
+   BEGIN
+      --trunc_timestamp := round( (curr_t - trunc(curr_t)) * 48 )/ 48 + trunc(curr_t);
+      trunc_timestamp := FLOOR( (curr_t - trunc(curr_t)) * 48 )/ 48 + trunc(curr_t) ;
+      RETURN trunc_timestamp;
+   END;
+
+BEGIN 
+   now_timestamp := sysdate;
+
+   dbms_output.put_line('now_timestamp = ' || to_char(now_timestamp, 'YYYY-MM-DD HH24:MI:SS'));
+   now_timestamp_rounded := trunc_timestamp(now_timestamp); 
+   dbms_output.put_line('now_timestamp_rounded = ' || to_char(now_timestamp_rounded, 'YYYY-MM-DD HH24:MI:SS'));
+   
+   tgt_timestamps.extend; 
+   tgt_timestamps(1) := now_timestamp_rounded;
+   
+   FOR i in 2 .. 48 LOOP 
+      tgt_timestamps.extend; 
+      tgt_timestamps(i) := tgt_timestamps(i-1) - INTERVAL '30' MINUTE;
+   END LOOP; 
+   
+    FOR i in 1 .. 48 LOOP 
+      dbms_output.put_line('t = ' || to_char(tgt_timestamps(i), 'YYYY-MM-DD HH24:MI:SS')); 
+   END LOOP; 
+   
+   dbms_output.put_line('finished!');
+END; 
